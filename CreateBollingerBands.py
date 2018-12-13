@@ -12,7 +12,6 @@ Steps:
 """
 
 import pandas as pd
-import numpy as np
 
 
 def main():
@@ -32,8 +31,10 @@ def main():
     
     # a win occurrs if a given row's BarCloseBid is less then the previous row's value
     inputDataFrame['SellWins'] = inputDataFrame.where(inputDataFrame['BarCloseBid'] >= inputDataFrame['BarCloseBid'].shift(-1), False, False).any(axis=1)
-    UpperResults = inputDataFrame.loc[(inputDataFrame['CrossedUpper'] == True).shift(1)]
-    LowerResults = inputDataFrame.loc[(inputDataFrame['CrossedUpper'] == True).shift(1)]
-    print("Exiting")
+    
+    # print out analyzed data
+    header = ['DateTimeStamp','BarOpenBid','BarHighBid','BarLowBid','BarCloseBid','Volume','20 Min MA', '20 Min STD', 'UpperBand', 'LowerBand', 'CrossedUpper', 'CrossedLower', 'SellWins']
+    inputDataFrame.to_csv(outputPath, columns = header)
+    #print("Exiting")
     
 main()
