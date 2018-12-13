@@ -12,6 +12,7 @@ Steps:
 """
 
 import pandas as pd
+import numpy as np
 
 
 def main():
@@ -19,6 +20,20 @@ def main():
     outputPath = "C:\\Users\\Michael Townsend\\Desktop\\StockInfo\\FOREX\\Data\\BollingerBands.txt"
     inputDataFrame = pd.read_csv(inputPath, delimiter=';')
     inputDataFrame['20 Min MA'] = inputDataFrame['BarCloseBid'].rolling(window=20).mean()
+    inputDataFrame['20 Min STD'] = inputDataFrame['BarCloseBid'].rolling(window=20).std()
+    inputDataFrame['UpperBand'] = inputDataFrame['20 Min MA'] + (inputDataFrame['20 Min STD'] * 2)
+    inputDataFrame['LowerBand'] = inputDataFrame['20 Min MA'] - (inputDataFrame['20 Min STD'] * 2)
+    
+    # Crossed above over Upper Bollinger Band
+    inputDataFrame['CrossedUpper'] = inputDataFrame.where(inputDataFrame['BarCloseBid'] > inputDataFrame['UpperBand'], False, False).any(axis=1)
+    
+    # Crossed under over Lower Bollinger Band
+    inputDataFrame['CrossedLower'] = inputDataFrame.where(inputDataFrame['BarCloseBid'] < inputDataFrame['LowerBand'], False, False).any(axis=1)
+    
+    # a win occurrs if a given row's BarCloseBid is less then the previous row's value
+    inputDataFrame['SellWins'] = inputDataFrame.where(inputDataFrame['BarCloseBid'] >= inputDataFrame['BarCloseBid'].shift(-1), False, False).any(axis=1)
+    UpperResults = inputDataFrame.loc[(inputDataFrame['CrossedUpper'] == True).shift(1)]
+    LowerResults = inputDataFrame.loc[(inputDataFrame['CrossedUpper'] == True).shift(1)]
     print("Exiting")
     
 main()
