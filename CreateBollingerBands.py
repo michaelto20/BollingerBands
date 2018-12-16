@@ -18,7 +18,7 @@ def main():
     inputPath = "C:\\Users\\Michael Townsend\\Desktop\\StockInfo\\FOREX\\Data\\DAT_ASCII_USDJPY_M1_2017_TRIMMED.csv"
     outputPath = "C:\\Users\\Michael Townsend\\Desktop\\StockInfo\\FOREX\\Data\\BollingerBands.csv"
     stdDeviations = 3
-    rollingWindow = 50
+    rollingWindow = 40
     inputDataFrame = pd.read_csv(inputPath, delimiter=';')
     inputDataFrame['20 Min MA'] = inputDataFrame['BarCloseBid'].rolling(window=rollingWindow).mean()
     inputDataFrame['20 Min STD'] = inputDataFrame['BarCloseBid'].rolling(window=rollingWindow).std()
@@ -37,19 +37,24 @@ def main():
     # Crossed Upper Bound in the previous time interval (speculating that what goes up must come down, hopefully in this time interval)
     inputDataFrame['PreviouslyCrossedUpper'] = inputDataFrame.where(inputDataFrame['CrossedUpper'].shift(1) == True, False, False).any(axis = 1).astype(int)
     
+    
     # a win occurrs if a given row's BarCloseBid is less then the previous row's value
     inputDataFrame['SellWins'] = inputDataFrame.where(inputDataFrame['BarCloseBid'] >= inputDataFrame['BarCloseBid'].shift(-1), False, False).any(axis=1).astype(int)
+    
+    # previous winner
+    inputDataFrame.insert(14,'PreviousWinner', inputDataFrame['SellWins'].shift(1))
+    
     
     # filter data
     previouslyCrossedUpper = inputDataFrame['PreviouslyCrossedUpper'] == True
     negativeSlope = inputDataFrame['Slope'] < -0.004
     
     # print out analyzed data
-    #header = ['CrossedUpper', 'Slope', 'PreviouslyCrossedUpper', 'SellWins']
-    header = ['DateTimeStamp','BarOpenBid','BarHighBid','BarLowBid','BarCloseBid','Volume','20 Min MA', '20 Min STD', 'UpperBand', 'LowerBand', 'CrossedUpper', 'CrossedLower', 'Slope', 'PreviouslyCrossedUpper','SellWins']
+    header = ['Slope', 'PreviousWinner', 'SellWins']
+    #header = ['DateTimeStamp','BarOpenBid','BarHighBid','BarLowBid','BarCloseBid','Volume','20 Min MA', '20 Min STD', 'UpperBand', 'LowerBand', 'CrossedUpper', 'CrossedLower', 'Slope', 'PreviouslyCrossedUpper','SellWins']
     
-    inputDataFrame[previouslyCrossedUpper & negativeSlope].to_csv(outputPath, columns = header)
-    #inputDataFrame.to_csv(outputPath, columns = header)
+    #inputDataFrame[previouslyCrossedUpper & negativeSlope].to_csv(outputPath, columns = header)
+    inputDataFrame.to_csv(outputPath, columns = header)
     #print("Exiting")
     
 main()
